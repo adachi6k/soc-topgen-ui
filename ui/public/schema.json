@@ -1,0 +1,165 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FlooNoC Configuration",
+  "description": "JSON Schema for FlooNoC floogen YAML configuration",
+  "type": "object",
+  "required": ["protocols", "endpoints", "routers", "connections", "routing", "top"],
+  "properties": {
+    "protocols": {
+      "type": "object",
+      "description": "Protocol definitions (AXI, etc.)",
+      "patternProperties": {
+        "^[a-zA-Z_][a-zA-Z0-9_]*$": {
+          "type": "object",
+          "required": ["data_width", "addr_width", "id_width"],
+          "properties": {
+            "data_width": {
+              "type": "integer",
+              "minimum": 8,
+              "description": "Data bus width in bits"
+            },
+            "addr_width": {
+              "type": "integer",
+              "minimum": 8,
+              "description": "Address bus width in bits"
+            },
+            "id_width": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "ID width in bits"
+            },
+            "user_width": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "User signal width in bits"
+            }
+          }
+        }
+      }
+    },
+    "endpoints": {
+      "type": "array",
+      "description": "List of endpoints (masters and slaves)",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "protocol"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+            "description": "Endpoint name"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["master", "slave"],
+            "description": "Endpoint type"
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol name (must be defined in protocols)"
+          },
+          "addr_range": {
+            "type": "array",
+            "description": "Address range for slave endpoints [start, end]",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": ["integer", "string"],
+              "description": "Address (can be hex string or integer)"
+            }
+          },
+          "chimneys": {
+            "type": "array",
+            "description": "List of chimneys (network interfaces)",
+            "items": {
+              "type": "object",
+              "required": ["name"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                  "description": "Chimney name"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "routers": {
+      "type": "array",
+      "description": "List of routers",
+      "items": {
+        "type": "object",
+        "required": ["name", "pos"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+            "description": "Router name"
+          },
+          "pos": {
+            "type": "array",
+            "description": "Router position [x, y]",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "integer",
+              "description": "Coordinate"
+            }
+          }
+        }
+      }
+    },
+    "connections": {
+      "type": "array",
+      "description": "List of connections between chimneys and routers",
+      "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Source node (chimney or router name)"
+          },
+          "to": {
+            "type": "string",
+            "description": "Destination node (chimney or router name)"
+          }
+        }
+      }
+    },
+    "routing": {
+      "type": "object",
+      "description": "Routing configuration",
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["deterministic", "adaptive"],
+          "description": "Routing mode"
+        }
+      }
+    },
+    "top": {
+      "type": "object",
+      "description": "Top-level module configuration",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+          "description": "Top module name"
+        },
+        "export_axi": {
+          "type": "array",
+          "description": "List of endpoints to export as top-level AXI ports",
+          "items": {
+            "type": "string",
+            "description": "Endpoint name"
+          }
+        }
+      }
+    }
+  }
+}

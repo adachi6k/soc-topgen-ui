@@ -9,9 +9,10 @@ The soc-topgen-ui application is deployed to GitHub Pages as a static frontend. 
 ## What Works on GitHub Pages
 
 ✅ **Frontend UI**: The complete React-based user interface  
-✅ **Client-side Validation**: Configuration validation using JSON Schema  
+✅ **Client-side Validation**: Configuration validation using JSON Schema (works offline!)  
 ✅ **Configuration Editor**: Visual editing of FlooNoC configurations  
 ✅ **Example Loading**: Pre-loaded example configurations  
+✅ **Offline Mode**: Full validation support without backend connection  
 
 ## What Requires Backend
 
@@ -25,11 +26,12 @@ The soc-topgen-ui application is deployed to GitHub Pages as a static frontend. 
 │     GitHub Pages (Static Frontend)      │
 │                                         │
 │  - Configuration Editor                 │
-│  - Client-side Validation              │
+│  - Client-side Validation (Offline!)   │
 │  - Example Configurations              │
+│  - Bundled JSON Schema                 │
 └─────────────────────────────────────────┘
            │
-           │ (Optional)
+           │ (Optional - for RTL generation)
            ▼
 ┌─────────────────────────────────────────┐
 │    Your Backend Server (Optional)       │
@@ -39,6 +41,8 @@ The soc-topgen-ui application is deployed to GitHub Pages as a static frontend. 
 │  - ZIP File Generation                 │
 └─────────────────────────────────────────┘
 ```
+
+The frontend includes a bundled JSON schema file, allowing it to perform full validation without any backend connection. This means users can edit and validate configurations entirely offline on GitHub Pages.
 
 ## Automatic Deployment
 

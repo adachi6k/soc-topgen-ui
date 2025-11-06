@@ -9,4 +9,4 @@
  * - Error formatting utilities
  */
 
-export {};
+export { ClientValidator, clientValidator, type ValidationResult } from './validator';
