@@ -1,0 +1,39 @@
+# Default FlooNoC Configuration Template
+# This template provides a starting point for creating new configurations
+
+protocols:
+  axi:
+    data_width: 64
+    addr_width: 32
+    id_width: 4
+
+endpoints:
+  - name: master_0
+    type: master
+    protocol: axi
+    chimneys:
+      - name: master_0_ch
+
+  - name: slave_0
+    type: slave
+    protocol: axi
+    addr_range: [0x00000000, 0x0000ffff]
+    chimneys:
+      - name: slave_0_ch
+
+routers:
+  - name: router_0
+    pos: [0, 0]
+
+connections:
+  - from: master_0_ch
+    to: router_0
+  - from: router_0
+    to: slave_0_ch
+
+routing:
+  mode: deterministic
+
+top:
+  name: default_soc
+  export_axi: [master_0, slave_0]

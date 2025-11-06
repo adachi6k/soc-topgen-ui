@@ -1,0 +1,18 @@
+# Backend requirements for soc-topgen-ui
+# Flask-based backend for floogen RTL generation
+
+# Web framework
+Flask==3.0.0
+Flask-CORS==4.0.0
+
+# YAML processing
+PyYAML==6.0.1
+
+# JSON Schema validation
+jsonschema==4.20.0
+
+# For API documentation (optional)
+flask-swagger-ui==4.11.1
+
+# For running floogen (will be installed separately)
+# floogen package will be pip installed from source
