@@ -71,6 +71,17 @@ soc-topgen-ui/
 
 ## Quick Start
 
+### GitHub Pages Demo
+
+🌐 **Try it online**: [https://adachi6k.github.io/soc-topgen-ui/](https://adachi6k.github.io/soc-topgen-ui/)
+
+The GitHub Pages deployment provides:
+- Configuration editor with syntax highlighting
+- Real-time validation using JSON Schema
+- Example configurations
+
+**Note**: RTL generation requires running the backend locally. See [GitHub Pages Deployment Guide](./docs/GITHUB_PAGES.md) for details.
+
 ### Prerequisites
 
 - **Backend**: Python 3.10+, floogen (from FlooNoC)
@@ -199,6 +210,10 @@ Generated RTL files will include appropriate license headers.
 - [PULP Platform](https://pulp-platform.org/) - Open-source hardware platform
 
 ## Documentation
+
+- 📖 [Detailed Specification](./docs/SPEC.md)
+- 🚀 [GitHub Pages Deployment Guide](./docs/GITHUB_PAGES.md)
+- 🛠️ [Development Guide](./docs/DEVELOPMENT.md) (if exists)
 
 For detailed specification, see [docs/SPEC.md](./docs/SPEC.md).
 

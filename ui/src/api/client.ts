@@ -6,7 +6,9 @@
 import axios, { AxiosInstance } from 'axios';
 
 // Backend API base URL - can be configured via environment variable
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// For GitHub Pages deployment, users can set VITE_API_URL to point to their backend
+// Default to relative path '/api' which works with Vite proxy in development
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 /**
  * API Client class for backend communication
