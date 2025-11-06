@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: soc-topgen-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ../backend:/app
+      - backend_output:/app/output
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    networks:
+      - soc-topgen-network
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    container_name: soc-topgen-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    networks:
+      - soc-topgen-network
+
+volumes:
+  backend_output:
+
+networks:
+  soc-topgen-network:
+    driver: bridge

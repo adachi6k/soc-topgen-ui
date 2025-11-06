@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+    
+    - name: Validate examples
+      run: |
+        cd backend
+        python -c "
+        from validators.config_validator import ConfigValidator
+        import yaml
+        
+        validator = ConfigValidator('../docs/schema/floonoc_config.schema.json')
+        
+        # Test minimal example
+        with open('../examples/minimal.yml') as f:
+            config = yaml.safe_load(f)
+        valid, errors = validator.validate(config)
+        if not valid:
+            print('Validation errors:', errors)
+            exit(1)
+        print('minimal.yml: OK')
+        
+        # Test multi_slave example
+        with open('../examples/multi_slave.yml') as f:
+            config = yaml.safe_load(f)
+        valid, errors = validator.validate(config)
+        if not valid:
+            print('Validation errors:', errors)
+            exit(1)
+        print('multi_slave.yml: OK')
+        "
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install dependencies
+      run: |
+        cd ui
+        npm install
+    
+    - name: Build
+      run: |
+        cd ui
+        npm run build
+    
+    - name: Lint
+      run: |
+        cd ui
+        npm run lint
+
+  schema-validation:
+    name: Validate JSON Schema
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install jsonschema
+      run: pip install jsonschema
+    
+    - name: Validate schema
+      run: |
+        python -c "
+        import json
+        from jsonschema import Draft7Validator
+        
+        with open('docs/schema/floonoc_config.schema.json') as f:
+            schema = json.load(f)
+        
+        # Check if schema itself is valid
+        Draft7Validator.check_schema(schema)
+        print('Schema is valid')
+        "
