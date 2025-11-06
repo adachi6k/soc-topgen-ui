@@ -52,8 +52,8 @@ def get_schema() -> Tuple[Dict[str, Any], int]:
         return jsonify(schema), 200
     except FileNotFoundError:
         return jsonify({"error": "Schema file not found"}), 404
-    except json.JSONDecodeError as e:
-        return jsonify({"error": f"Invalid schema file: {str(e)}"}), 500
+    except json.JSONDecodeError:
+        return jsonify({"error": "Invalid schema file"}), 500
 
 
 @app.route("/api/validate", methods=["POST"])
@@ -87,10 +87,10 @@ def validate_config() -> Tuple[Dict[str, Any], int]:
         
         return jsonify(response), 200
         
-    except Exception as e:
+    except Exception:
         return jsonify({
             "valid": False,
-            "errors": [f"Validation error: {str(e)}"]
+            "errors": ["Internal validation error"]
         }), 500
 
 
@@ -145,10 +145,10 @@ def generate_rtl() -> Tuple[Dict[str, Any], int]:
                 "stderr": result.get("stderr", "")
             }), 500
             
-    except Exception as e:
+    except Exception:
         return jsonify({
             "success": False,
-            "error": f"Generation error: {str(e)}"
+            "error": "Internal generation error"
         }), 500
 
 
@@ -172,9 +172,9 @@ def get_job_status(job_id: str) -> Tuple[Dict[str, Any], int]:
                 "error": f"Job {job_id} not found"
             }), 404
             
-    except Exception as e:
+    except Exception:
         return jsonify({
-            "error": f"Error retrieving job: {str(e)}"
+            "error": "Error retrieving job"
         }), 500
 
 
@@ -205,12 +205,14 @@ def download_job_result(job_id: str):
             download_name=f"{job_id}_rtl.zip"
         )
         
-    except Exception as e:
+    except Exception:
         return jsonify({
-            "error": f"Download error: {str(e)}"
+            "error": "Download error"
         }), 500
 
 
 if __name__ == "__main__":
-    # Development server
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # Development server - WARNING: debug mode should not be used in production
+    # In production, use a WSGI server like gunicorn instead
+    debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
+    app.run(host="0.0.0.0", port=5000, debug=debug_mode)
