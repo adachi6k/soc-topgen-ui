@@ -35,7 +35,7 @@ class ApiClient {
   /**
    * Get current JSON Schema
    */
-  async getSchema(): Promise<any> {
+  async getSchema(): Promise<Record<string, unknown>> {
     const response = await this.client.get('/api/schemas/current');
     return response.data;
   }
@@ -78,7 +78,7 @@ class ApiClient {
   /**
    * Get job status
    */
-  async getJobStatus(jobId: string): Promise<any> {
+  async getJobStatus(jobId: string): Promise<Record<string, unknown>> {
     const response = await this.client.get(`/api/jobs/${jobId}`);
     return response.data;
   }
