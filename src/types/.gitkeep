@@ -1,0 +1,10 @@
+# Types
+
+このディレクトリには、TypeScript型定義を配置します。
+
+## 型定義ファイル
+
+- component.ts - コンポーネント型
+- connection.ts - 接続型
+- topology.ts - トポロジー型
+- index.ts - エクスポート

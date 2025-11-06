@@ -1,0 +1,9 @@
+# Utils
+
+このディレクトリには、ユーティリティ関数を配置します。
+
+## ユーティリティ例
+
+- validation.ts - バリデーション関数
+- generators.ts - ID生成など
+- formatters.ts - データフォーマット

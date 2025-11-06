@@ -1,0 +1,8 @@
+# Pages
+
+このディレクトリには、ページコンポーネントを配置します。
+
+## ページ例
+
+- EditorPage.tsx - メインエディタページ
+- ProjectListPage.tsx - プロジェクト一覧ページ
