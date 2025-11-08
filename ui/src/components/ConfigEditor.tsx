@@ -15,8 +15,9 @@ import ConnectionEditor from './ConnectionEditor';
 import RoutingEditor from './RoutingEditor';
 import TopEditor from './TopEditor';
 import ValidationPanel from './ValidationPanel';
+import TopologyDiagram from './TopologyDiagram';
 
-type Tab = 'protocols' | 'endpoints' | 'routers' | 'connections' | 'routing' | 'top' | 'yaml';
+type Tab = 'protocols' | 'endpoints' | 'routers' | 'connections' | 'routing' | 'top' | 'topology' | 'yaml';
 
 const ConfigEditor: React.FC = () => {
   const [config, setConfig] = useState<FlooNoCConfig>(createDefaultConfig());
@@ -176,6 +177,14 @@ const ConfigEditor: React.FC = () => {
             onChange={(top) => setConfig({ ...config, top })}
           />
         );
+      case 'topology':
+        return (
+          <TopologyDiagram
+            endpoints={config.endpoints}
+            routers={config.routers}
+            connections={config.connections}
+          />
+        );
       case 'yaml':
         return (
           <div className="yaml-editor">
@@ -228,7 +237,7 @@ const ConfigEditor: React.FC = () => {
       </div>
 
       <div className="editor-tabs">
-        {(['protocols', 'endpoints', 'routers', 'connections', 'routing', 'top', 'yaml'] as Tab[]).map((tab) => (
+        {(['protocols', 'endpoints', 'routers', 'connections', 'routing', 'top', 'topology', 'yaml'] as Tab[]).map((tab) => (
           <button
             key={tab}
             className={`tab ${activeTab === tab ? 'active' : ''}`}

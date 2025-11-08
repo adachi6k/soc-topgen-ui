@@ -598,8 +598,75 @@
     background: rgba(0, 0, 0, 0.02);
   }
   
+  .topology-diagram {
+    background: rgba(0, 0, 0, 0.02);
+  }
+  
+  .topology-diagram-container,
+  .topology-legend {
+    background: white;
+  }
+  
   .app-footer {
     border-top-color: #ddd;
   }
+}
+
+/* Topology Diagram */
+.topology-diagram {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 1.5rem;
+}
+
+.topology-diagram h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #646cff;
+}
+
+.topology-diagram-container {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  padding: 1.5rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.topology-svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.topology-diagram-empty {
+  padding: 3rem;
+  text-align: center;
+  color: #888;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.topology-legend {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  border: 1px solid #333;
 }
 
