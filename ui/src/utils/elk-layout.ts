@@ -34,6 +34,8 @@ const elk = new ELK();
 
 const BLOCK_WIDTH = 140;
 const BLOCK_HEIGHT = 60;
+const ROUTER_WIDTH = 480; // Wider aspect ratio for NoC routers to minimize arrow bends
+const ROUTER_HEIGHT = 60;
 
 /**
  * Compute automatic layout for topology graph using ELK.js
@@ -79,8 +81,8 @@ export async function computeElkLayout(
   routers.forEach((router) => {
     elkNodes.push({
       id: router.name,
-      width: BLOCK_WIDTH,
-      height: BLOCK_HEIGHT,
+      width: ROUTER_WIDTH,
+      height: ROUTER_HEIGHT,
       labels: [{ text: router.name }],
       // @ts-expect-error - custom property for layer assignment
       properties: { layer: 1 },
@@ -167,8 +169,8 @@ export async function computeElkLayout(
         type,
         x: child.x || 0,
         y: child.y || 0,
-        width: child.width || BLOCK_WIDTH,
-        height: child.height || BLOCK_HEIGHT,
+        width: child.width || (type === 'router' ? ROUTER_WIDTH : BLOCK_WIDTH),
+        height: child.height || (type === 'router' ? ROUTER_HEIGHT : BLOCK_HEIGHT),
       });
     });
   }

@@ -24,6 +24,8 @@ interface BlockNode {
 
 const BLOCK_WIDTH = 140;
 const BLOCK_HEIGHT = 60;
+const ROUTER_WIDTH = 480; // Wider aspect ratio for NoC routers to minimize arrow bends
+const ROUTER_HEIGHT = 60;
 const VERTICAL_SPACING = 100;
 const HORIZONTAL_SPACING = 20;
 const MARGIN = 40;
@@ -48,7 +50,9 @@ const TopologyDiagram: React.FC<TopologyDiagramProps> = ({
 
     // Calculate layout
     const maxWidth = Math.max(masters.length, routers.length, slaves.length);
-    const totalWidth = maxWidth * BLOCK_WIDTH + (maxWidth - 1) * HORIZONTAL_SPACING + 2 * MARGIN;
+    const maxRouterWidth = routers.length * ROUTER_WIDTH + (routers.length - 1) * HORIZONTAL_SPACING;
+    const maxEndpointWidth = maxWidth * BLOCK_WIDTH + (maxWidth - 1) * HORIZONTAL_SPACING;
+    const totalWidth = Math.max(maxRouterWidth, maxEndpointWidth) + 2 * MARGIN;
     const totalHeight = 3 * BLOCK_HEIGHT + 2 * VERTICAL_SPACING + 2 * MARGIN;
 
     const blocks: BlockNode[] = [];
@@ -69,15 +73,15 @@ const TopologyDiagram: React.FC<TopologyDiagramProps> = ({
 
     // Position routers in the middle
     routers.forEach((router, i) => {
-      const x = MARGIN + i * (BLOCK_WIDTH + HORIZONTAL_SPACING);
+      const x = MARGIN + i * (ROUTER_WIDTH + HORIZONTAL_SPACING);
       blocks.push({
         id: router.name,
         label: router.name,
         type: 'router',
         x,
         y: MARGIN + BLOCK_HEIGHT + VERTICAL_SPACING,
-        width: BLOCK_WIDTH,
-        height: BLOCK_HEIGHT,
+        width: ROUTER_WIDTH,
+        height: ROUTER_HEIGHT,
       });
     });
 
