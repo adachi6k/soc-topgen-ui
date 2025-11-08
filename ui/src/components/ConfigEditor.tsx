@@ -45,14 +45,40 @@ const ConfigEditor: React.FC = () => {
     const validateConfig = async () => {
       setIsValidating(true);
       try {
+        // Check if backend is available first
+        const backendAvailable = await apiClient.isBackendAvailable();
+        
+        if (!backendAvailable) {
+          // Backend not available - don't show error, just indicate unavailability
+          setValidation({
+            valid: true,
+            errors: [],
+            backendUnavailable: true,
+          });
+          setIsValidating(false);
+          return;
+        }
+
+        // Backend available - proceed with validation
         const yamlStr = stringifyYAML(config);
         const result = await apiClient.validateConfig(yamlStr);
         setValidation(result);
       } catch (error) {
-        setValidation({
-          valid: false,
-          errors: [error instanceof Error ? error.message : 'Validation failed'],
-        });
+        // Only show validation error if backend was previously available
+        // This prevents showing errors on initial load when backend isn't running
+        const backendWasAvailable = await apiClient.isBackendAvailable();
+        if (backendWasAvailable) {
+          setValidation({
+            valid: false,
+            errors: [error instanceof Error ? error.message : 'Validation failed'],
+          });
+        } else {
+          setValidation({
+            valid: true,
+            errors: [],
+            backendUnavailable: true,
+          });
+        }
       } finally {
         setIsValidating(false);
       }
