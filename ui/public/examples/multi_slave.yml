@@ -1,0 +1,65 @@
+# Multi-Slave FlooNoC Configuration Example
+# One master, multiple slaves with different address ranges
+
+protocols:
+  axi:
+    data_width: 64
+    addr_width: 32
+    id_width: 6
+
+endpoints:
+  - name: cpu_master
+    type: master
+    protocol: axi
+    chimneys:
+      - name: cpu_ch
+
+  - name: ram0
+    type: slave
+    protocol: axi
+    addr_range: [0x80000000, 0x8000ffff]
+    chimneys:
+      - name: ram0_ch
+
+  - name: ram1
+    type: slave
+    protocol: axi
+    addr_range: [0x80010000, 0x8001ffff]
+    chimneys:
+      - name: ram1_ch
+
+  - name: peripheral
+    type: slave
+    protocol: axi
+    addr_range: [0x40000000, 0x40000fff]
+    chimneys:
+      - name: periph_ch
+
+routers:
+  - name: r0
+    pos: [0, 0]
+  - name: r1
+    pos: [1, 0]
+  - name: r2
+    pos: [0, 1]
+
+connections:
+  - from: cpu_ch
+    to: r0
+  - from: r0
+    to: r1
+  - from: r0
+    to: r2
+  - from: r1
+    to: ram0_ch
+  - from: r1
+    to: ram1_ch
+  - from: r2
+    to: periph_ch
+
+routing:
+  mode: deterministic
+
+top:
+  name: multi_slave_soc
+  export_axi: [cpu_master, ram0, ram1, peripheral]
