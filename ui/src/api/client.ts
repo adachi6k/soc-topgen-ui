@@ -15,6 +15,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
  */
 class ApiClient {
   private client: AxiosInstance;
+  private backendAvailable: boolean | null = null;
+  private checkingBackend: boolean = false;
 
   constructor(baseURL: string = API_BASE_URL) {
     this.client = axios.create({
@@ -24,6 +26,33 @@ class ApiClient {
       },
       timeout: 30000, // 30 second timeout
     });
+  }
+
+  /**
+   * Check if backend is available
+   */
+  async isBackendAvailable(): Promise<boolean> {
+    // Return cached result if available
+    if (this.backendAvailable !== null) {
+      return this.backendAvailable;
+    }
+
+    // Prevent concurrent checks
+    if (this.checkingBackend) {
+      return false;
+    }
+
+    this.checkingBackend = true;
+    try {
+      await this.healthCheck();
+      this.backendAvailable = true;
+      return true;
+    } catch (error) {
+      this.backendAvailable = false;
+      return false;
+    } finally {
+      this.checkingBackend = false;
+    }
   }
 
   /**

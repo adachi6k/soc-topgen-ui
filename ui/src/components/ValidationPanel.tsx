@@ -29,6 +29,20 @@ const ValidationPanel: React.FC<ValidationPanelProps> = ({ validation, isValidat
     );
   }
 
+  // Backend unavailable - show info message instead of error
+  if (validation.backendUnavailable) {
+    return (
+      <div className="validation-panel info">
+        <h3>ℹ️ Validation Unavailable</h3>
+        <div className="info-message">
+          <p>Backend validation is not available.</p>
+          <p>The configuration editor is running in static mode (GitHub Pages).</p>
+          <p>To enable full validation and RTL generation, please run the backend locally.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`validation-panel ${validation.valid ? 'valid' : 'invalid'}`}>
       <h3>{validation.valid ? '✅ Valid Configuration' : '❌ Invalid Configuration'}</h3>

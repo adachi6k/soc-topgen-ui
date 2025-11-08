@@ -473,6 +473,26 @@
   color: #ffa726;
 }
 
+.validation-panel.info {
+  border-color: #2196f3;
+  background: rgba(33, 150, 243, 0.1);
+}
+
+.validation-panel.info h3 {
+  color: #64b5f6;
+}
+
+.validation-panel .info-message {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: #90caf9;
+  line-height: 1.5;
+}
+
+.validation-panel .info-message p {
+  margin: 0.5rem 0;
+}
+
 .validation-panel .errors {
   margin-top: 0.75rem;
 }

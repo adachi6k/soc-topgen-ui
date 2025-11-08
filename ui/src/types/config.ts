@@ -56,4 +56,5 @@ export interface FlooNoCConfig {
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
+  backendUnavailable?: boolean;
 }
