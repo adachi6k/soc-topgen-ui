@@ -1,0 +1,39 @@
+# Minimal FlooNoC Configuration Example
+# Single master, single slave, one router
+
+protocols:
+  axi:
+    data_width: 64
+    addr_width: 32
+    id_width: 6
+
+endpoints:
+  - name: m0
+    type: master
+    protocol: axi
+    chimneys:
+      - name: m0_ch
+
+  - name: s0
+    type: slave
+    protocol: axi
+    addr_range: [0x80000000, 0x8000ffff]
+    chimneys:
+      - name: s0_ch
+
+routers:
+  - name: r0
+    pos: [0, 0]
+
+connections:
+  - from: m0_ch
+    to: r0
+  - from: r0
+    to: s0_ch
+
+routing:
+  mode: deterministic
+
+top:
+  name: soc_top
+  export_axi: [m0, s0]

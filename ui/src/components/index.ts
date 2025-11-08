@@ -1,15 +1,12 @@
 /**
- * Placeholder for React components
- * 
- * Future components will include:
- * - ConfigEditor: Main configuration editor
- * - ProtocolForm: Protocol configuration form
- * - EndpointForm: Endpoint configuration form
- * - RouterForm: Router configuration form
- * - ConnectionEditor: Visual connection editor
- * - ValidationPanel: Display validation results
- * - YAMLExporter: Export/import YAML
- * - RTLGenerator: Trigger RTL generation
+ * Component exports
  */
 
-export {};
+export { default as ConfigEditor } from './ConfigEditor';
+export { default as ProtocolEditor } from './ProtocolEditor';
+export { default as EndpointEditor } from './EndpointEditor';
+export { default as RouterEditor } from './RouterEditor';
+export { default as ConnectionEditor } from './ConnectionEditor';
+export { default as RoutingEditor } from './RoutingEditor';
+export { default as TopEditor } from './TopEditor';
+export { default as ValidationPanel } from './ValidationPanel';
