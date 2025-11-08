@@ -77,7 +77,15 @@ const ConfigEditor: React.FC = () => {
 
   const handleLoadExample = async (exampleName: string) => {
     try {
-      const response = await fetch(`/examples/${exampleName}.yml`);
+      // Use import.meta.env.BASE_URL to respect the base path in GitHub Pages deployment
+      const basePath = import.meta.env.BASE_URL || '/';
+      const examplePath = `${basePath}examples/${exampleName}.yml`;
+      const response = await fetch(examplePath);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const yamlText = await response.text();
       const parsed = parseYAML(yamlText);
       setConfig(parsed);
