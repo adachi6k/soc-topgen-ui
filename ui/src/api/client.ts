@@ -30,7 +30,7 @@ class ApiClient {
    * Health check endpoint
    */
   async healthCheck(): Promise<{ status: string; service: string }> {
-    const response = await this.client.get('/api/health');
+    const response = await this.client.get('/health');
     return response.data;
   }
 
@@ -38,7 +38,7 @@ class ApiClient {
    * Get current JSON Schema
    */
   async getSchema(): Promise<Record<string, unknown>> {
-    const response = await this.client.get('/api/schemas/current');
+    const response = await this.client.get('/schemas/current');
     return response.data;
   }
 
@@ -49,7 +49,7 @@ class ApiClient {
     valid: boolean;
     errors: string[];
   }> {
-    const response = await this.client.post('/api/validate', {
+    const response = await this.client.post('/validate', {
       config,
     });
     return response.data;
@@ -70,7 +70,7 @@ class ApiClient {
     error?: string;
     validation_errors?: string[];
   }> {
-    const response = await this.client.post('/api/generate', {
+    const response = await this.client.post('/generate', {
       config,
       job_id: jobId,
     });
@@ -81,7 +81,7 @@ class ApiClient {
    * Get job status
    */
   async getJobStatus(jobId: string): Promise<Record<string, unknown>> {
-    const response = await this.client.get(`/api/jobs/${jobId}`);
+    const response = await this.client.get(`/jobs/${jobId}`);
     return response.data;
   }
 
@@ -89,7 +89,7 @@ class ApiClient {
    * Get download URL for job result
    */
   getDownloadUrl(jobId: string): string {
-    return `${API_BASE_URL}/api/jobs/${jobId}/download`;
+    return `${API_BASE_URL}/jobs/${jobId}/download`;
   }
 }
 
