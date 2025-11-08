@@ -11,3 +11,4 @@ export { default as RoutingEditor } from './RoutingEditor';
 export { default as TopEditor } from './TopEditor';
 export { default as ValidationPanel } from './ValidationPanel';
 export { default as TopologyDiagram } from './TopologyDiagram';
+export { default as TopologyCanvas } from './TopologyCanvas';

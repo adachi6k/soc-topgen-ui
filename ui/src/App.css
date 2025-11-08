@@ -690,3 +690,125 @@
   border: 1px solid #333;
 }
 
+/* Topology Canvas - Interactive D3 Diagram */
+.topology-canvas {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 1.5rem;
+}
+
+.topology-canvas h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #646cff;
+}
+
+.topology-canvas-controls {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(100, 108, 255, 0.1);
+  border-left: 3px solid #646cff;
+  border-radius: 4px;
+}
+
+.topology-canvas-controls .controls-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #aaa;
+  line-height: 1.5;
+}
+
+.topology-canvas-controls kbd {
+  display: inline-block;
+  padding: 0.2rem 0.4rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #555;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #646cff;
+}
+
+.topology-canvas-container {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  position: relative;
+  min-height: 600px;
+}
+
+.topology-svg-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.topology-canvas-loading {
+  padding: 3rem;
+  text-align: center;
+  color: #888;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topology-canvas-loading p {
+  font-size: 1.1rem;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.topology-canvas-empty {
+  padding: 3rem;
+  text-align: center;
+  color: #888;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* D3 Node and Edge Styles */
+.topology-canvas .node {
+  transition: opacity 0.2s;
+}
+
+.topology-canvas .node:hover {
+  opacity: 0.9;
+}
+
+.topology-canvas .node rect {
+  transition: stroke-width 0.2s;
+}
+
+.topology-canvas .node:hover rect {
+  stroke-width: 3;
+}
+
+.topology-canvas .edge-path {
+  transition: stroke-width 0.2s, stroke 0.2s;
+}
+
+.topology-canvas .edge-path:hover {
+  stroke: #646cff;
+  stroke-width: 3;
+}
+
+
