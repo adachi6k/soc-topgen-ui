@@ -21,6 +21,8 @@ export interface LayoutEdge {
   source: string;
   target: string;
   points?: Array<{ x: number; y: number }>;
+  sourcePort?: { x: number; y: number };
+  targetPort?: { x: number; y: number };
 }
 
 export interface LayoutResult {
@@ -34,8 +36,100 @@ const elk = new ELK();
 
 const BLOCK_WIDTH = 140;
 const BLOCK_HEIGHT = 60;
-const ROUTER_WIDTH = 480; // Wider aspect ratio for NoC routers to minimize arrow bends
+const MIN_ROUTER_WIDTH = 200; // Minimum width for NoC routers
 const ROUTER_HEIGHT = 60;
+const ROUTER_PADDING = 40; // Padding around child nodes
+
+/**
+ * Build a graph of connections to determine parent-child relationships
+ */
+function buildConnectionGraph(
+  connections: Connection[],
+  chimneyToEndpoint: Map<string, Endpoint>,
+  nodeIds: Set<string>
+): Map<string, Set<string>> {
+  const graph = new Map<string, Set<string>>();
+
+  connections.forEach((conn) => {
+    let fromId = conn.from;
+    let toId = conn.to;
+
+    // Map chimney names to their parent endpoints
+    if (!nodeIds.has(fromId)) {
+      const endpoint = chimneyToEndpoint.get(conn.from);
+      if (endpoint) fromId = endpoint.name;
+    }
+    if (!nodeIds.has(toId)) {
+      const endpoint = chimneyToEndpoint.get(conn.to);
+      if (endpoint) toId = endpoint.name;
+    }
+
+    if (nodeIds.has(fromId) && nodeIds.has(toId)) {
+      if (!graph.has(fromId)) {
+        graph.set(fromId, new Set());
+      }
+      graph.get(fromId)!.add(toId);
+    }
+  });
+
+  return graph;
+}
+
+/**
+ * Calculate router widths based on the span of their children
+ * This is done after ELK layout to use the actual child positions
+ */
+function calculateDynamicRouterWidths(
+  layouted: ElkNode,
+  connectionGraph: Map<string, Set<string>>,
+  routerIds: Set<string>
+): Map<string, number> {
+  const routerWidths = new Map<string, number>();
+
+  if (!layouted.children) return routerWidths;
+
+  // Create a map of node positions
+  const nodePositions = new Map<string, { x: number; width: number }>();
+  layouted.children.forEach((child) => {
+    nodePositions.set(child.id, {
+      x: child.x || 0,
+      width: child.width || BLOCK_WIDTH,
+    });
+  });
+
+  // Calculate width for each router based on children span
+  routerIds.forEach((routerId) => {
+    const children = connectionGraph.get(routerId);
+    
+    if (!children || children.size === 0) {
+      // No children, use minimum width
+      routerWidths.set(routerId, MIN_ROUTER_WIDTH);
+      return;
+    }
+
+    // Find the span of all children
+    let minX = Infinity;
+    let maxX = -Infinity;
+
+    children.forEach((childId) => {
+      const childPos = nodePositions.get(childId);
+      if (childPos) {
+        minX = Math.min(minX, childPos.x);
+        maxX = Math.max(maxX, childPos.x + childPos.width);
+      }
+    });
+
+    if (minX !== Infinity && maxX !== -Infinity) {
+      // Width should span all children plus padding
+      const spanWidth = maxX - minX + 2 * ROUTER_PADDING;
+      routerWidths.set(routerId, Math.max(spanWidth, MIN_ROUTER_WIDTH));
+    } else {
+      routerWidths.set(routerId, MIN_ROUTER_WIDTH);
+    }
+  });
+
+  return routerWidths;
+}
 
 /**
  * Compute automatic layout for topology graph using ELK.js
@@ -77,11 +171,12 @@ export async function computeElkLayout(
     });
   });
 
-  // Add routers
+  // Add routers (initial width, will be recalculated later)
+  const routerIds = new Set(routers.map(r => r.name));
   routers.forEach((router) => {
     elkNodes.push({
       id: router.name,
-      width: ROUTER_WIDTH,
+      width: MIN_ROUTER_WIDTH,
       height: ROUTER_HEIGHT,
       labels: [{ text: router.name }],
       // @ts-expect-error - custom property for layer assignment
@@ -148,8 +243,15 @@ export async function computeElkLayout(
   // Compute layout
   const layouted = await elk.layout(graph);
 
-  // Extract positioned nodes
+  // Build connection graph for dynamic width calculation
+  const connectionGraph = buildConnectionGraph(connections, chimneyToEndpoint, nodeIds);
+
+  // Calculate dynamic router widths based on child node positions
+  const routerWidths = calculateDynamicRouterWidths(layouted, connectionGraph, routerIds);
+
+  // Extract positioned nodes with dynamic widths for routers
   const nodes: LayoutNode[] = [];
+  const nodeMap = new Map<string, LayoutNode>();
   
   if (layouted.children) {
     layouted.children.forEach((child) => {
@@ -162,32 +264,99 @@ export async function computeElkLayout(
       } else if (router) {
         type = 'router';
       }
+
+      // Use dynamic width for routers
+      let nodeWidth = child.width || BLOCK_WIDTH;
+      if (type === 'router' && routerWidths.has(child.id)) {
+        nodeWidth = routerWidths.get(child.id)!;
+      }
       
-      nodes.push({
+      const node: LayoutNode = {
         id: child.id,
         label: child.id,
         type,
         x: child.x || 0,
         y: child.y || 0,
-        width: child.width || (type === 'router' ? ROUTER_WIDTH : BLOCK_WIDTH),
+        width: nodeWidth,
         height: child.height || (type === 'router' ? ROUTER_HEIGHT : BLOCK_HEIGHT),
-      });
+      };
+
+      nodes.push(node);
+      nodeMap.set(node.id, node);
     });
   }
 
-  // Extract edges with routing points
+  // Calculate optimal port positions for each edge
+  const calculatePortPosition = (
+    sourceNode: LayoutNode,
+    targetNode: LayoutNode,
+    isSource: boolean
+  ): { x: number; y: number } => {
+    if (isSource) {
+      // Source port is at the bottom of the source node
+      // Calculate horizontal position based on target alignment
+      const targetCenterX = targetNode.x + targetNode.width / 2;
+      const sourceLeftX = sourceNode.x;
+      const sourceRightX = sourceNode.x + sourceNode.width;
+
+      // Clamp target position to source node bounds for straighter lines
+      let portX = targetCenterX;
+      if (targetCenterX < sourceLeftX) {
+        portX = sourceLeftX;
+      } else if (targetCenterX > sourceRightX) {
+        portX = sourceRightX;
+      }
+
+      return {
+        x: portX,
+        y: sourceNode.y + sourceNode.height,
+      };
+    } else {
+      // Target port is at the top of the target node
+      // Calculate horizontal position based on source alignment
+      const sourceCenterX = sourceNode.x + sourceNode.width / 2;
+      const targetLeftX = targetNode.x;
+      const targetRightX = targetNode.x + targetNode.width;
+
+      // Clamp source position to target node bounds for straighter lines
+      let portX = sourceCenterX;
+      if (sourceCenterX < targetLeftX) {
+        portX = targetLeftX;
+      } else if (sourceCenterX > targetRightX) {
+        portX = targetRightX;
+      }
+
+      return {
+        x: portX,
+        y: targetNode.y,
+      };
+    }
+  };
+
+  // Extract edges with routing points and port positions
   const edges: LayoutEdge[] = [];
   
   if (layouted.edges) {
     layouted.edges.forEach((edge) => {
+      const sourceNode = nodeMap.get(edge.sources?.[0] || '');
+      const targetNode = nodeMap.get(edge.targets?.[0] || '');
+
       const points = edge.sections?.[0]?.bendPoints?.map(bp => ({ x: bp.x, y: bp.y }));
       
-      edges.push({
+      const edgeData: LayoutEdge = {
         id: edge.id,
         source: edge.sources?.[0] || '',
         target: edge.targets?.[0] || '',
         points,
-      });
+      };
+
+      // Calculate port positions for straighter connections
+      if (sourceNode && targetNode) {
+        edgeData.sourcePort = calculatePortPosition(sourceNode, targetNode, true);
+        edgeData.targetPort = calculatePortPosition(sourceNode, targetNode, false);
+      }
+
+      edges.push(edgeData);
     });
   }
 

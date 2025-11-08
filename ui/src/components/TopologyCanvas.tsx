@@ -184,11 +184,12 @@ const TopologyCanvas: React.FC<TopologyCanvasProps> = ({
         
         if (!sourceNode || !targetNode) return '';
 
-        const from = {
+        // Use port positions if available for straighter connections
+        const from = d.sourcePort || {
           x: sourceNode.x + sourceNode.width / 2,
           y: sourceNode.y + sourceNode.height,
         };
-        const to = {
+        const to = d.targetPort || {
           x: targetNode.x + targetNode.width / 2,
           y: targetNode.y,
         };
@@ -220,12 +221,32 @@ const TopologyCanvas: React.FC<TopologyCanvasProps> = ({
         
         if (!sourceNode || !targetNode) return '';
 
+        // Recalculate port positions based on current node positions
+        const targetCenterX = targetNode.x + targetNode.width / 2;
+        const sourceCenterX = sourceNode.x + sourceNode.width / 2;
+        
+        // Source port with horizontal alignment to target
+        let sourcePortX = targetCenterX;
+        if (targetCenterX < sourceNode.x) {
+          sourcePortX = sourceNode.x;
+        } else if (targetCenterX > sourceNode.x + sourceNode.width) {
+          sourcePortX = sourceNode.x + sourceNode.width;
+        }
+
+        // Target port with horizontal alignment to source
+        let targetPortX = sourceCenterX;
+        if (sourceCenterX < targetNode.x) {
+          targetPortX = targetNode.x;
+        } else if (sourceCenterX > targetNode.x + targetNode.width) {
+          targetPortX = targetNode.x + targetNode.width;
+        }
+
         const from = {
-          x: sourceNode.x + sourceNode.width / 2,
+          x: sourcePortX,
           y: sourceNode.y + sourceNode.height,
         };
         const to = {
-          x: targetNode.x + targetNode.width / 2,
+          x: targetPortX,
           y: targetNode.y,
         };
 
