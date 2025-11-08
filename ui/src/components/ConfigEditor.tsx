@@ -15,7 +15,7 @@ import ConnectionEditor from './ConnectionEditor';
 import RoutingEditor from './RoutingEditor';
 import TopEditor from './TopEditor';
 import ValidationPanel from './ValidationPanel';
-import TopologyDiagram from './TopologyDiagram';
+import TopologyCanvas from './TopologyCanvas';
 
 type Tab = 'protocols' | 'endpoints' | 'routers' | 'connections' | 'routing' | 'top' | 'topology' | 'yaml';
 
@@ -213,7 +213,7 @@ const ConfigEditor: React.FC = () => {
         );
       case 'topology':
         return (
-          <TopologyDiagram
+          <TopologyCanvas
             endpoints={config.endpoints}
             routers={config.routers}
             connections={config.connections}
