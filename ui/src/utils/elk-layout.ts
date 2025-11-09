@@ -36,11 +36,11 @@ export interface LayoutResult {
 // Layout constants for column grid
 const COL_GAP = 160;           // Column spacing
 const LEVEL_GAP = 120;         // Layer spacing
-const NODE_PADDING = 24;       // Internal node padding
 const MIN_WIDTH = 140;         // Minimum node width
 const MAX_WIDTH = 720;         // Maximum node width
 const NODE_HEIGHT = 44;        // Fixed node height
 const CANVAS_PADDING = 48;     // Canvas padding
+const SIBLING_SPACING = 16;    // Minimum horizontal spacing between sibling nodes
 
 const BLOCK_WIDTH = 140;
 
@@ -201,8 +201,9 @@ function calculateLayout(roots: HierarchyNode[]): LayoutNode[] {
     
     if (node.type === 'router') {
       // Router width based on span
-      width = spanCols * COL_GAP + 2 * NODE_PADDING;
-      width = Math.max(MIN_WIDTH, Math.min(width, MAX_WIDTH));
+      // Use column span width minus spacing to prevent overlap with siblings
+      const baseWidth = spanCols * COL_GAP - SIBLING_SPACING;
+      width = Math.max(MIN_WIDTH, Math.min(baseWidth, MAX_WIDTH));
     } else {
       // Endpoints use fixed width
       width = BLOCK_WIDTH;
