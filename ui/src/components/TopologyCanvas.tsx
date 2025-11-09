@@ -184,11 +184,12 @@ const TopologyCanvas: React.FC<TopologyCanvasProps> = ({
         
         if (!sourceNode || !targetNode) return '';
 
-        const from = {
+        // Use port positions if available for straighter connections
+        const from = d.sourcePort || {
           x: sourceNode.x + sourceNode.width / 2,
           y: sourceNode.y + sourceNode.height,
         };
-        const to = {
+        const to = d.targetPort || {
           x: targetNode.x + targetNode.width / 2,
           y: targetNode.y,
         };
@@ -214,18 +215,63 @@ const TopologyCanvas: React.FC<TopologyCanvasProps> = ({
 
     // Update edges function
     const updateEdges = () => {
+      // Group edges by source for proper port distribution
+      const edgesBySource = new Map<string, typeof edges[0][]>();
+      edges.forEach(edge => {
+        if (!edgesBySource.has(edge.source)) {
+          edgesBySource.set(edge.source, []);
+        }
+        edgesBySource.get(edge.source)!.push(edge);
+      });
+      
+      // Sort edges by target position for each source
+      edgesBySource.forEach(edgeGroup => {
+        edgeGroup.sort((a, b) => {
+          const targetA = nodes.find(n => n.id === a.target);
+          const targetB = nodes.find(n => n.id === b.target);
+          if (!targetA || !targetB) return 0;
+          return (targetA.x + targetA.width / 2) - (targetB.x + targetB.width / 2);
+        });
+      });
+      
       edgeElements.select('path').attr('d', (d) => {
         const sourceNode = nodes.find(n => n.id === d.source);
         const targetNode = nodes.find(n => n.id === d.target);
         
         if (!sourceNode || !targetNode) return '';
 
+        // Find this edge's position among edges from the same source
+        const sourceEdges = edgesBySource.get(d.source) || [];
+        const connIndex = sourceEdges.findIndex(e => e.id === d.id);
+        const totalConns = sourceEdges.length;
+
+        // Calculate source port X position based on number of connections
+        let sourcePortX: number;
+        const sourceCenterX = sourceNode.x + sourceNode.width / 2;
+        
+        if (totalConns === 1) {
+          // Single connection: use center
+          sourcePortX = sourceCenterX;
+        } else {
+          // Multiple connections: distribute evenly across the width
+          const segmentWidth = sourceNode.width / totalConns;
+          sourcePortX = sourceNode.x + segmentWidth * (connIndex + 0.5);
+        }
+
+        // Target port with horizontal alignment to source
+        let targetPortX = sourcePortX;
+        if (sourcePortX < targetNode.x) {
+          targetPortX = targetNode.x;
+        } else if (sourcePortX > targetNode.x + targetNode.width) {
+          targetPortX = targetNode.x + targetNode.width;
+        }
+
         const from = {
-          x: sourceNode.x + sourceNode.width / 2,
+          x: sourcePortX,
           y: sourceNode.y + sourceNode.height,
         };
         const to = {
-          x: targetNode.x + targetNode.width / 2,
+          x: targetPortX,
           y: targetNode.y,
         };
 
