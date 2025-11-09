@@ -245,7 +245,16 @@ function calculateEdges(
   const nodeMap = new Map<string, LayoutNode>();
   nodes.forEach(n => nodeMap.set(n.id, n));
   
-  const edges: LayoutEdge[] = [];
+  // Map connections to resolved node IDs
+  interface ResolvedConnection {
+    sourceId: string;
+    targetId: string;
+    source: LayoutNode;
+    target: LayoutNode;
+    index: number;
+  }
+  
+  const resolvedConnections: ResolvedConnection[] = [];
   
   connections.forEach((conn, index) => {
     let fromId = conn.from;
@@ -261,11 +270,37 @@ function calculateEdges(
     const source = nodeMap.get(fromId);
     const target = nodeMap.get(toId);
     
-    if (!source || !target) return;
+    if (source && target) {
+      resolvedConnections.push({
+        sourceId: fromId,
+        targetId: toId,
+        source,
+        target,
+        index,
+      });
+    }
+  });
+  
+  // Group connections by source node
+  const connectionsBySource = new Map<string, ResolvedConnection[]>();
+  resolvedConnections.forEach(conn => {
+    if (!connectionsBySource.has(conn.sourceId)) {
+      connectionsBySource.set(conn.sourceId, []);
+    }
+    connectionsBySource.get(conn.sourceId)!.push(conn);
+  });
+  
+  // Calculate edges with distributed port positions
+  const edges: LayoutEdge[] = [];
+  
+  connectionsBySource.forEach((conns) => {
+    // Sort connections by target x position for consistent ordering
+    conns.sort((a, b) => (a.target.x + a.target.width / 2) - (b.target.x + b.target.width / 2));
     
-    // Calculate edge with Manhattan routing
-    const edge = calculateManhattanEdge(source, target, index);
-    edges.push(edge);
+    conns.forEach((conn, connIndex) => {
+      const edge = calculateManhattanEdge(conn.source, conn.target, conn.index, connIndex, conns.length);
+      edges.push(edge);
+    });
   });
   
   return edges;
@@ -273,24 +308,32 @@ function calculateEdges(
 
 /**
  * Calculate Manhattan edge path between two nodes
+ * @param source Source node
+ * @param target Target node
+ * @param edgeIndex Global edge index for ID
+ * @param connIndex Index of this connection among connections from the same source (0-based)
+ * @param totalConns Total number of connections from this source node
  */
 function calculateManhattanEdge(
   source: LayoutNode,
   target: LayoutNode,
-  index: number
+  edgeIndex: number,
+  connIndex: number,
+  totalConns: number
 ): LayoutEdge {
   const sourceCenterX = source.x + source.width / 2;
-  const targetCenterX = target.x + target.width / 2;
   
-  // Determine which side of parent to connect from
-  const useRightSide = targetCenterX >= sourceCenterX;
-  
-  // Calculate source port position
+  // Calculate source port X position based on number of connections
   let sourcePortX: number;
-  if (useRightSide) {
-    sourcePortX = source.x + source.width;
+  
+  if (totalConns === 1) {
+    // Single connection: use center
+    sourcePortX = sourceCenterX;
   } else {
-    sourcePortX = source.x;
+    // Multiple connections: distribute evenly across the width
+    // Divide the width into N equal segments and use the center of each segment
+    const segmentWidth = source.width / totalConns;
+    sourcePortX = source.x + segmentWidth * (connIndex + 0.5);
   }
   
   const sourcePort = {
@@ -329,7 +372,7 @@ function calculateManhattanEdge(
   }
   
   return {
-    id: `edge_${index}`,
+    id: `edge_${edgeIndex}`,
     source: source.id,
     target: target.id,
     points,
