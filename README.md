@@ -14,6 +14,10 @@ Browser-based SoC Top RTL Generator UI with FlooNoC/floogen Integration
 - 📦 **Easy Export**: Download generated RTL as ZIP files
 - 🐳 **Docker Support**: Containerized deployment with Docker Compose
 - 🔒 **Type-Safe**: TypeScript frontend with comprehensive type definitions
+- 🎯 **Complex Topologies**: Support for multi-layer interconnects, bridges, and subsystems
+- 🔵 **Connection Types**: Visualize coherent, non-coherent, and AXI connections with color coding
+- ↔️ **Bidirectional Connections**: Model buses and caches with bidirectional arrows
+- 📊 **Interactive Diagrams**: Drag, zoom, and pan topology visualizations
 
 ## Architecture
 
@@ -213,9 +217,13 @@ Generated RTL files will include appropriate license headers.
 
 - 📖 [Detailed Specification](./docs/SPEC.md)
 - 🚀 [GitHub Pages Deployment Guide](./docs/GITHUB_PAGES.md)
+- 🎨 [Complex Block Diagram Features](./docs/COMPLEX_DIAGRAMS.md)
+- 💡 [Example Configurations](./examples/README.md)
 - 🛠️ [Development Guide](./docs/DEVELOPMENT.md) (if exists)
 
 For detailed specification, see [docs/SPEC.md](./docs/SPEC.md).
+
+For complex diagram features, see [docs/COMPLEX_DIAGRAMS.md](./docs/COMPLEX_DIAGRAMS.md).
 
 ## Support
 
