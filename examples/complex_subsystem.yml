@@ -1,0 +1,226 @@
+# Complex Subsystem Example - Similar to Arteris Architecture
+# Features multiple subsystems, coherent/non-coherent interconnects, and bridges
+
+protocols:
+  axi:
+    data_width: 64
+    addr_width: 32
+    id_width: 6
+  
+  axi_lite:
+    data_width: 32
+    addr_width: 32
+    id_width: 4
+
+endpoints:
+  # Design-Specific Subsystems (Left side)
+  - name: axi_subsystem_a
+    type: master
+    protocol: axi
+    subsystem: "Design Specific"
+    description: "AXI Subsystem A"
+    chimneys:
+      - name: axi_subsys_a_out
+        direction: output
+
+  - name: axi_subsystem_b
+    type: master
+    protocol: axi
+    subsystem: "Design Specific"
+    description: "AXI Subsystem B"
+    chimneys:
+      - name: axi_subsys_b_out
+        direction: output
+
+  # Safety Critical Subsystem (Top right)
+  - name: safety_critical_subsystem
+    type: master
+    protocol: axi
+    subsystem: "Safety Critical"
+    description: "Safety Critical Subsystem"
+    chimneys:
+      - name: safety_crit_out
+        direction: output
+
+  # Central Subsystems (Middle)
+  - name: coherent_llc
+    type: slave
+    protocol: axi
+    addr_range: [0x90000000, 0x9fffffff]
+    subsystem: "Subsystem Interconnect"
+    description: "Coherent LLC Cache"
+    chimneys:
+      - name: coherent_llc_in
+        direction: input
+
+  - name: subsystem_interconnect_master
+    type: master
+    protocol: axi
+    subsystem: "Subsystem Interconnect"
+    chimneys:
+      - name: subsys_inter_out
+        direction: output
+
+  # Memory Subsystem (Bottom left)
+  - name: memory_scheduler
+    type: slave
+    protocol: axi
+    addr_range: [0x80000000, 0x8fffffff]
+    subsystem: "Memory Subsystem"
+    description: "Memory Scheduler"
+    chimneys:
+      - name: mem_sched_in
+        direction: input
+
+  - name: ddr_controller
+    type: slave
+    protocol: axi
+    addr_range: [0x80000000, 0x8fffffff]
+    subsystem: "Memory Subsystem"
+    components: ["DDR PHY", "Memory Controller"]
+    chimneys:
+      - name: ddr_ctrl_in
+        direction: input
+
+  # I/O Peripherals (Bottom right)
+  - name: io_peripheral_a
+    type: slave
+    protocol: axi_lite
+    addr_range: [0x40000000, 0x40000fff]
+    subsystem: "I/O Peripherals"
+    description: "I/O Peripheral A"
+    chimneys:
+      - name: io_periph_a_in
+        direction: input
+
+  - name: io_peripheral_b
+    type: slave
+    protocol: axi_lite
+    addr_range: [0x40001000, 0x40001fff]
+    subsystem: "I/O Peripherals"
+    description: "I/O Peripheral B"
+    chimneys:
+      - name: io_periph_b_in
+        direction: input
+
+  # Arm Cortex R52 (Right side)
+  - name: arm_cortex_r52
+    type: master
+    protocol: axi
+    subsystem: "Arm Cortex R52"
+    description: "Dual MII"
+    chimneys:
+      - name: cortex_r52_out
+        direction: output
+
+routers:
+  # Coherent Interconnect (horizontal bus in the middle)
+  - name: coherent_interconnect
+    pos: [2, 1]
+    type: interconnect
+    description: "Coherent Interconnect"
+    width: 480
+    height: 80
+
+  # Non-coherent Interconnect (horizontal bus below coherent)
+  - name: noncoh_interconnect
+    pos: [2, 2]
+    type: interconnect
+    description: "Non-coherent Interconnect"
+    width: 480
+    height: 80
+
+  # FlexNoC bridges for routing
+  - name: flexnoc_bridge_1
+    pos: [1, 1]
+    type: bridge
+    description: "FlexNoC Bridge"
+
+  - name: flexnoc_bridge_2
+    pos: [3, 1]
+    type: bridge
+    description: "FlexNoC Bridge"
+
+  - name: flexnoc_bridge_3
+    pos: [1, 2]
+    type: bridge
+    description: "FlexNoC Bridge"
+
+  - name: flexnoc_bridge_4
+    pos: [3, 2]
+    type: bridge
+    description: "FlexNoC Bridge"
+
+connections:
+  # Design-Specific Subsystems to Coherent Interconnect
+  - from: axi_subsys_a_out
+    to: flexnoc_bridge_1
+    type: coherent
+    label: "Coherent"
+
+  - from: axi_subsys_b_out
+    to: flexnoc_bridge_1
+    type: coherent
+    label: "Coherent"
+
+  - from: flexnoc_bridge_1
+    to: coherent_interconnect
+    type: coherent
+
+  # Safety Critical to Non-coherent Interconnect
+  - from: safety_crit_out
+    to: flexnoc_bridge_2
+    type: non-coherent
+
+  - from: flexnoc_bridge_2
+    to: noncoh_interconnect
+    type: non-coherent
+
+  # Coherent Interconnect to Central Subsystem
+  - from: coherent_interconnect
+    to: coherent_llc_in
+    type: coherent
+    bidirectional: true
+
+  - from: coherent_interconnect
+    to: subsys_inter_out
+    type: coherent
+
+  # Non-coherent Interconnect connections
+  - from: noncoh_interconnect
+    to: flexnoc_bridge_3
+    type: non-coherent
+
+  - from: noncoh_interconnect
+    to: flexnoc_bridge_4
+    type: non-coherent
+
+  # Memory Subsystem
+  - from: flexnoc_bridge_3
+    to: mem_sched_in
+    type: axi
+
+  - from: mem_sched_in
+    to: ddr_ctrl_in
+    type: axi
+
+  # I/O Peripherals
+  - from: flexnoc_bridge_4
+    to: io_periph_a_in
+    type: axi
+
+  - from: flexnoc_bridge_4
+    to: io_periph_b_in
+    type: axi
+
+  # Arm Cortex R52 connections
+  - from: cortex_r52_out
+    to: flexnoc_bridge_2
+    type: axi
+
+routing:
+  mode: deterministic
+
+top:
+  name: complex_subsystem_soc
+  export_axi: [axi_subsystem_a, axi_subsystem_b, safety_critical_subsystem, arm_cortex_r52, memory_scheduler, ddr_controller, io_peripheral_a, io_peripheral_b]

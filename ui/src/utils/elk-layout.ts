@@ -8,7 +8,7 @@ import { Endpoint, Router, Connection } from '../types/config';
 export interface LayoutNode {
   id: string;
   label: string;
-  type: 'master' | 'slave' | 'router';
+  type: 'master' | 'slave' | 'router' | 'interconnect' | 'bridge';
   x: number;
   y: number;
   width: number;
@@ -21,6 +21,8 @@ export interface LayoutEdge {
   id: string;
   source: string;
   target: string;
+  sourceId?: string;
+  targetId?: string;
   points?: Array<{ x: number; y: number }>;
   sourcePort?: { x: number; y: number };
   targetPort?: { x: number; y: number };
@@ -47,13 +49,14 @@ const BLOCK_WIDTH = 140;
 interface HierarchyNode {
   id: string;
   label: string;
-  type: 'master' | 'slave' | 'router';
+  type: 'master' | 'slave' | 'router' | 'interconnect' | 'bridge';
   children: HierarchyNode[];
   parent?: HierarchyNode;
   colIndex?: number;
   minCol?: number;
   maxCol?: number;
   depth: number;
+  routerConfig?: Router;
 }
 
 /**
@@ -86,12 +89,15 @@ function buildHierarchy(
   });
 
   routers.forEach((router) => {
+    const nodeType = router.type === 'interconnect' ? 'interconnect' : 
+                     router.type === 'bridge' ? 'bridge' : 'router';
     nodeMap.set(router.name, {
       id: router.name,
       label: router.name,
-      type: 'router',
+      type: nodeType,
       children: [],
       depth: 0, // Will be calculated later
+      routerConfig: router,
     });
   });
 
@@ -199,15 +205,29 @@ function calculateLayout(roots: HierarchyNode[]): LayoutNode[] {
     const spanCols = (node.maxCol ?? 0) - (node.minCol ?? 0) + 1;
     let width: number;
     
-    if (node.type === 'router') {
-      // Router width based on span
-      // Use column span width minus spacing to prevent overlap with siblings
-      const baseWidth = spanCols * COL_GAP - SIBLING_SPACING;
-      width = Math.max(MIN_WIDTH, Math.min(baseWidth, MAX_WIDTH));
+    if (node.type === 'router' || node.type === 'interconnect' || node.type === 'bridge') {
+      // Check if router has custom width
+      if (node.routerConfig?.width) {
+        width = node.routerConfig.width;
+      } else if (node.type === 'interconnect') {
+        // Interconnects are wider by default
+        const baseWidth = spanCols * COL_GAP - SIBLING_SPACING;
+        width = Math.max(360, Math.min(baseWidth, MAX_WIDTH));
+      } else if (node.type === 'bridge') {
+        // Bridges are smaller
+        width = 120;
+      } else {
+        // Standard router
+        const baseWidth = spanCols * COL_GAP - SIBLING_SPACING;
+        width = Math.max(MIN_WIDTH, Math.min(baseWidth, MAX_WIDTH));
+      }
     } else {
       // Endpoints use fixed width
       width = BLOCK_WIDTH;
     }
+    
+    // Get height (custom or default)
+    const height = node.routerConfig?.height ?? NODE_HEIGHT;
     
     // Calculate y position based on depth
     const y = node.depth * LEVEL_GAP + CANVAS_PADDING;
@@ -222,7 +242,7 @@ function calculateLayout(roots: HierarchyNode[]): LayoutNode[] {
       x,
       y,
       width,
-      height: NODE_HEIGHT,
+      height,
       colIndex: node.colIndex,
       depth: node.depth,
     });
@@ -376,6 +396,8 @@ function calculateManhattanEdge(
     id: `edge_${edgeIndex}`,
     source: source.id,
     target: target.id,
+    sourceId: source.id,
+    targetId: target.id,
     points,
     sourcePort,
     targetPort,

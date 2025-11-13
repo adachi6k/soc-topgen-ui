@@ -676,6 +676,20 @@
   border-radius: 4px;
 }
 
+.legend-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.legend-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  color: #aaa;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
 .legend-item {
   display: flex;
   align-items: center;
@@ -688,6 +702,12 @@
   height: 20px;
   border-radius: 3px;
   border: 1px solid #333;
+}
+
+.legend-line {
+  width: 30px;
+  height: 3px;
+  border-radius: 2px;
 }
 
 /* Topology Canvas - Interactive D3 Diagram */

@@ -88,9 +88,11 @@ const TopologyCanvas: React.FC<TopologyCanvasProps> = ({
     // Create main group for zoom/pan
     const g = svg.append('g').attr('class', 'main-group');
 
-    // Define arrow marker
-    svg
-      .append('defs')
+    // Define arrow markers for different connection types
+    const defs = svg.append('defs');
+    
+    // Default arrowhead
+    defs
       .append('marker')
       .attr('id', 'arrowhead')
       .attr('viewBox', '0 0 10 10')
@@ -102,6 +104,76 @@ const TopologyCanvas: React.FC<TopologyCanvasProps> = ({
       .append('path')
       .attr('d', 'M 0 0 L 10 5 L 0 10 z')
       .attr('fill', '#666');
+
+    // Coherent connection arrowhead (blue)
+    defs
+      .append('marker')
+      .attr('id', 'arrowhead-coherent')
+      .attr('viewBox', '0 0 10 10')
+      .attr('refX', 10)
+      .attr('refY', 5)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M 0 0 L 10 5 L 0 10 z')
+      .attr('fill', '#1976d2');
+
+    // Non-coherent connection arrowhead (orange)
+    defs
+      .append('marker')
+      .attr('id', 'arrowhead-non-coherent')
+      .attr('viewBox', '0 0 10 10')
+      .attr('refX', 10)
+      .attr('refY', 5)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M 0 0 L 10 5 L 0 10 z')
+      .attr('fill', '#f57c00');
+
+    // AXI connection arrowhead (green)
+    defs
+      .append('marker')
+      .attr('id', 'arrowhead-axi')
+      .attr('viewBox', '0 0 10 10')
+      .attr('refX', 10)
+      .attr('refY', 5)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M 0 0 L 10 5 L 0 10 z')
+      .attr('fill', '#388e3c');
+
+    // Bidirectional marker (double-ended)
+    defs
+      .append('marker')
+      .attr('id', 'arrowhead-bidirectional')
+      .attr('viewBox', '0 0 10 10')
+      .attr('refX', 10)
+      .attr('refY', 5)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M 0 0 L 10 5 L 0 10 z')
+      .attr('fill', '#9c27b0');
+
+    // Reverse arrow marker for bidirectional connections
+    defs
+      .append('marker')
+      .attr('id', 'arrowhead-reverse')
+      .attr('viewBox', '0 0 10 10')
+      .attr('refX', 0)
+      .attr('refY', 5)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M 10 0 L 0 5 L 10 10 z')
+      .attr('fill', '#9c27b0');
 
     // Set up zoom behavior
     const zoom = d3.zoom<SVGSVGElement, unknown>()
@@ -141,22 +213,71 @@ const TopologyCanvas: React.FC<TopologyCanvasProps> = ({
     // Initial fit to view
     fitToView();
 
+    // Helper function to get edge color and style based on connection type
+    const getEdgeStyle = (edge: LayoutEdge) => {
+      const conn = connections.find(c => 
+        (c.from === edge.source || c.from === edge.sourceId) && 
+        (c.to === edge.target || c.to === edge.targetId)
+      );
+      
+      if (!conn) {
+        return { color: '#666', marker: 'url(#arrowhead)', width: 2 };
+      }
+
+      if (conn.bidirectional) {
+        return { 
+          color: '#9c27b0', 
+          marker: 'url(#arrowhead-bidirectional)',
+          markerStart: 'url(#arrowhead-reverse)',
+          width: 3 
+        };
+      }
+
+      switch (conn.type) {
+        case 'coherent':
+          return { color: '#1976d2', marker: 'url(#arrowhead-coherent)', width: 3 };
+        case 'non-coherent':
+          return { color: '#f57c00', marker: 'url(#arrowhead-non-coherent)', width: 3 };
+        case 'axi':
+          return { color: '#388e3c', marker: 'url(#arrowhead-axi)', width: 2 };
+        default:
+          return { color: '#666', marker: 'url(#arrowhead)', width: 2 };
+      }
+    };
+
     // Helper function to get node color
-    const getNodeColor = (type: string): string => {
-      switch (type) {
+    const getNodeColor = (node: LayoutNode): string => {
+      // Check if endpoint has custom color
+      const endpoint = endpoints.find(ep => ep.name === node.id);
+      if (endpoint?.color) return endpoint.color;
+
+      // Check if router has custom color
+      const router = routers.find(r => r.name === node.id);
+      if (router?.color) return router.color;
+
+      // Default colors based on type
+      switch (node.type) {
         case 'master': return '#1976d2';
         case 'slave': return '#388e3c';
         case 'router': return '#f57c00';
+        case 'interconnect': return '#7b1fa2';
+        case 'bridge': return '#c2185b';
         default: return '#757575';
       }
     };
 
     // Helper function to get node type label
-    const getNodeTypeLabel = (type: string): string => {
-      switch (type) {
+    const getNodeTypeLabel = (node: LayoutNode): string => {
+      const router = routers.find(r => r.name === node.id);
+      if (router?.type === 'interconnect') return 'Interconnect';
+      if (router?.type === 'bridge') return 'Bridge';
+      
+      switch (node.type) {
         case 'master': return 'Master';
         case 'slave': return 'Slave';
         case 'router': return 'NoC';
+        case 'interconnect': return 'Interconnect';
+        case 'bridge': return 'Bridge';
         default: return '';
       }
     };
@@ -207,11 +328,20 @@ const TopologyCanvas: React.FC<TopologyCanvasProps> = ({
         return orthogonalPath(from, to, 'bottom', 'top');
       })
       .attr('fill', 'none')
-      .attr('stroke', '#666')
-      .attr('stroke-width', 2)
-      .attr('marker-end', 'url(#arrowhead)')
+      .attr('stroke', (d) => getEdgeStyle(d).color)
+      .attr('stroke-width', (d) => getEdgeStyle(d).width)
+      .attr('marker-end', (d) => getEdgeStyle(d).marker)
+      .attr('marker-start', (d) => getEdgeStyle(d).markerStart || 'none')
       .append('title')
-      .text((d) => `${d.source} → ${d.target}`);
+      .text((d) => {
+        const conn = connections.find(c => 
+          (c.from === d.source || c.from === d.sourceId) && 
+          (c.to === d.target || c.to === d.targetId)
+        );
+        const connType = conn?.type || 'default';
+        const bidirectional = conn?.bidirectional ? ' (bidirectional)' : '';
+        return `${d.source} → ${d.target}\nType: ${connType}${bidirectional}`;
+      });
 
     // Update edges function
     const updateEdges = () => {
@@ -320,7 +450,7 @@ const TopologyCanvas: React.FC<TopologyCanvasProps> = ({
       .append('rect')
       .attr('width', (d) => d.width)
       .attr('height', (d) => d.height)
-      .attr('fill', (d) => getNodeColor(d.type))
+      .attr('fill', (d) => getNodeColor(d))
       .attr('stroke', '#333')
       .attr('stroke-width', 2)
       .attr('rx', 4);
@@ -334,7 +464,7 @@ const TopologyCanvas: React.FC<TopologyCanvasProps> = ({
       .attr('fill', 'white')
       .attr('font-size', '14')
       .attr('font-weight', 'bold')
-      .text((d) => getNodeTypeLabel(d.type));
+      .text((d) => getNodeTypeLabel(d));
 
     // Node name label
     nodeElements
@@ -362,7 +492,7 @@ const TopologyCanvas: React.FC<TopologyCanvasProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
     };
-  }, [nodes, edges, isLoading, endpoints]);
+  }, [nodes, edges, isLoading, endpoints, connections, routers]);
 
   if (isLoading) {
     return (
@@ -393,17 +523,51 @@ const TopologyCanvas: React.FC<TopologyCanvasProps> = ({
         <svg ref={svgRef} className="topology-svg-canvas"></svg>
       </div>
       <div className="topology-legend">
-        <div className="legend-item">
-          <span className="legend-color" style={{ backgroundColor: '#1976d2' }}></span>
-          <span>Master Endpoints</span>
+        <div className="legend-section">
+          <h4>Node Types</h4>
+          <div className="legend-item">
+            <span className="legend-color" style={{ backgroundColor: '#1976d2' }}></span>
+            <span>Master Endpoints</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ backgroundColor: '#f57c00' }}></span>
+            <span>NoC Routers</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ backgroundColor: '#7b1fa2' }}></span>
+            <span>Interconnects</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ backgroundColor: '#c2185b' }}></span>
+            <span>Bridges</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ backgroundColor: '#388e3c' }}></span>
+            <span>Slave Endpoints</span>
+          </div>
         </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ backgroundColor: '#f57c00' }}></span>
-          <span>NoC Routers</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ backgroundColor: '#388e3c' }}></span>
-          <span>Slave Endpoints</span>
+        <div className="legend-section">
+          <h4>Connection Types</h4>
+          <div className="legend-item">
+            <span className="legend-line" style={{ backgroundColor: '#1976d2' }}></span>
+            <span>Coherent</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-line" style={{ backgroundColor: '#f57c00' }}></span>
+            <span>Non-coherent</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-line" style={{ backgroundColor: '#388e3c' }}></span>
+            <span>AXI</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-line" style={{ backgroundColor: '#9c27b0' }}></span>
+            <span>Bidirectional</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-line" style={{ backgroundColor: '#666' }}></span>
+            <span>Default</span>
+          </div>
         </div>
       </div>
     </div>
