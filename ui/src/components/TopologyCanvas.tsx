@@ -523,17 +523,51 @@ const TopologyCanvas: React.FC<TopologyCanvasProps> = ({
         <svg ref={svgRef} className="topology-svg-canvas"></svg>
       </div>
       <div className="topology-legend">
-        <div className="legend-item">
-          <span className="legend-color" style={{ backgroundColor: '#1976d2' }}></span>
-          <span>Master Endpoints</span>
+        <div className="legend-section">
+          <h4>Node Types</h4>
+          <div className="legend-item">
+            <span className="legend-color" style={{ backgroundColor: '#1976d2' }}></span>
+            <span>Master Endpoints</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ backgroundColor: '#f57c00' }}></span>
+            <span>NoC Routers</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ backgroundColor: '#7b1fa2' }}></span>
+            <span>Interconnects</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ backgroundColor: '#c2185b' }}></span>
+            <span>Bridges</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ backgroundColor: '#388e3c' }}></span>
+            <span>Slave Endpoints</span>
+          </div>
         </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ backgroundColor: '#f57c00' }}></span>
-          <span>NoC Routers</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ backgroundColor: '#388e3c' }}></span>
-          <span>Slave Endpoints</span>
+        <div className="legend-section">
+          <h4>Connection Types</h4>
+          <div className="legend-item">
+            <span className="legend-line" style={{ backgroundColor: '#1976d2' }}></span>
+            <span>Coherent</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-line" style={{ backgroundColor: '#f57c00' }}></span>
+            <span>Non-coherent</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-line" style={{ backgroundColor: '#388e3c' }}></span>
+            <span>AXI</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-line" style={{ backgroundColor: '#9c27b0' }}></span>
+            <span>Bidirectional</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-line" style={{ backgroundColor: '#666' }}></span>
+            <span>Default</span>
+          </div>
         </div>
       </div>
     </div>
