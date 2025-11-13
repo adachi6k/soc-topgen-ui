@@ -15,6 +15,7 @@ export interface Protocols {
 
 export interface Chimney {
   name: string;
+  direction?: 'input' | 'output' | 'bidirectional';
 }
 
 export interface Endpoint {
@@ -23,16 +24,28 @@ export interface Endpoint {
   protocol: string;
   addr_range?: [number | string, number | string];
   chimneys?: Chimney[];
+  description?: string;
+  color?: string;
+  subsystem?: string;
+  components?: string[];
 }
 
 export interface Router {
   name: string;
   pos: [number, number];
+  type?: 'noc' | 'interconnect' | 'bridge';
+  width?: number;
+  height?: number;
+  color?: string;
+  description?: string;
 }
 
 export interface Connection {
   from: string;
   to: string;
+  type?: 'axi' | 'coherent' | 'non-coherent' | 'default';
+  bidirectional?: boolean;
+  label?: string;
 }
 
 export interface Routing {

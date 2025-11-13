@@ -1,0 +1,195 @@
+# Multi-Core CPU with Memory Hierarchy Example
+# Demonstrates multiple CPUs, caches, memory controllers, and peripherals
+
+protocols:
+  axi:
+    data_width: 64
+    addr_width: 32
+    id_width: 6
+
+endpoints:
+  # CPU Cores
+  - name: cpu0
+    type: master
+    protocol: axi
+    subsystem: "CPU Cluster"
+    description: "CPU Core 0"
+    chimneys:
+      - name: cpu0_ch
+        direction: output
+
+  - name: cpu1
+    type: master
+    protocol: axi
+    subsystem: "CPU Cluster"
+    description: "CPU Core 1"
+    chimneys:
+      - name: cpu1_ch
+        direction: output
+
+  - name: cpu2
+    type: master
+    protocol: axi
+    subsystem: "CPU Cluster"
+    description: "CPU Core 2"
+    chimneys:
+      - name: cpu2_ch
+        direction: output
+
+  # L2 Cache
+  - name: l2_cache
+    type: slave
+    protocol: axi
+    addr_range: [0x80000000, 0xffffffff]
+    subsystem: "Cache Subsystem"
+    description: "Shared L2 Cache"
+    chimneys:
+      - name: l2_in
+        direction: input
+      - name: l2_out
+        direction: output
+
+  # Memory Controllers
+  - name: ddr0_controller
+    type: slave
+    protocol: axi
+    addr_range: [0x80000000, 0xafffffff]
+    subsystem: "Memory Subsystem"
+    description: "DDR Controller 0"
+    chimneys:
+      - name: ddr0_in
+        direction: input
+
+  - name: ddr1_controller
+    type: slave
+    protocol: axi
+    addr_range: [0xb0000000, 0xdfffffff]
+    subsystem: "Memory Subsystem"
+    description: "DDR Controller 1"
+    chimneys:
+      - name: ddr1_in
+        direction: input
+
+  # Peripherals
+  - name: uart
+    type: slave
+    protocol: axi
+    addr_range: [0x40000000, 0x40000fff]
+    subsystem: "Peripherals"
+    description: "UART Controller"
+    chimneys:
+      - name: uart_in
+        direction: input
+
+  - name: gpio
+    type: slave
+    protocol: axi
+    addr_range: [0x40001000, 0x40001fff]
+    subsystem: "Peripherals"
+    description: "GPIO Controller"
+    chimneys:
+      - name: gpio_in
+        direction: input
+
+  - name: spi
+    type: slave
+    protocol: axi
+    addr_range: [0x40002000, 0x40002fff]
+    subsystem: "Peripherals"
+    description: "SPI Controller"
+    chimneys:
+      - name: spi_in
+        direction: input
+
+routers:
+  # CPU Cluster interconnect
+  - name: cpu_interconnect
+    pos: [1, 0]
+    type: interconnect
+    description: "CPU Cluster Interconnect"
+    width: 360
+
+  # Main system interconnect
+  - name: system_interconnect
+    pos: [1, 1]
+    type: interconnect
+    description: "Main System Interconnect"
+    width: 480
+
+  # Peripheral interconnect
+  - name: periph_interconnect
+    pos: [1, 2]
+    type: interconnect
+    description: "Peripheral Interconnect"
+    width: 360
+
+  # Memory interconnect
+  - name: memory_interconnect
+    pos: [2, 1]
+    type: interconnect
+    description: "Memory Interconnect"
+
+connections:
+  # CPUs to CPU interconnect
+  - from: cpu0_ch
+    to: cpu_interconnect
+    type: axi
+
+  - from: cpu1_ch
+    to: cpu_interconnect
+    type: axi
+
+  - from: cpu2_ch
+    to: cpu_interconnect
+    type: axi
+
+  # CPU interconnect to L2 cache
+  - from: cpu_interconnect
+    to: l2_in
+    type: axi
+    bidirectional: true
+
+  # L2 cache to system interconnect
+  - from: l2_out
+    to: system_interconnect
+    type: axi
+
+  # System interconnect to memory interconnect
+  - from: system_interconnect
+    to: memory_interconnect
+    type: axi
+    bidirectional: true
+
+  # Memory interconnect to DDR controllers
+  - from: memory_interconnect
+    to: ddr0_in
+    type: axi
+
+  - from: memory_interconnect
+    to: ddr1_in
+    type: axi
+
+  # System interconnect to peripheral interconnect
+  - from: system_interconnect
+    to: periph_interconnect
+    type: axi
+
+  # Peripheral interconnect to peripherals
+  - from: periph_interconnect
+    to: uart_in
+    type: axi
+
+  - from: periph_interconnect
+    to: gpio_in
+    type: axi
+
+  - from: periph_interconnect
+    to: spi_in
+    type: axi
+
+routing:
+  mode: deterministic
+
+top:
+  name: multicore_soc
+  export_axi: [cpu0, cpu1, cpu2, l2_cache, ddr0_controller, ddr1_controller, uart, gpio, spi]
