@@ -16,6 +16,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code
 COPY backend/ .
 
+# Copy schema files needed by the backend
+# Schema path is calculated as BASE_DIR.parent / "docs" / "schema"
+# where BASE_DIR = /app, so we need schema at /docs/schema
+COPY docs/schema /docs/schema
+
 # Create output directory
 RUN mkdir -p /app/output
 
